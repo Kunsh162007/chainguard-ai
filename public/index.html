@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChainGuard AI — Supply Chain Intelligence</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+
+  <!-- ═══════════════════════════════════════════════════════════════
+     STEP 1 — PASTE YOUR FIREBASE CONFIG
+     Get from: console.firebase.google.com → Project Settings → Your Apps
+═══════════════════════════════════════════════════════════════ -->
+  <script type="module">
+    import { initializeApp }
+      from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue, push, get, update }
+      from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    const firebaseConfig = {
+      apiKey: "AIzaSyDHRSdcBQG0eDLdGLJmvyY8ye8gUjSoyW8",
+      authDomain: "chainguard-ai-29b80.firebaseapp.com",
+      databaseURL: "https://chainguard-ai-29b80-default-rtdb.firebaseio.com",
+      projectId: "chainguard-ai-29b80",
+      storageBucket: "chainguard-ai-29b80.firebasestorage.app",
+      messagingSenderId: "175672905125",
+      appId: "1:175672905125:web:d8f041b111afec3c74ac4c",
+      measurementId: "G-JY4TYD1LN5"
+    };
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      window._db = db; window._ref = ref; window._set = set;
+      window._onValue = onValue; window._push = push;
+      window._get = get; window._update = update;
+      window._fbReady = true;
+      document.dispatchEvent(new Event("fbReady"));
+    } catch (e) { console.warn("Firebase:", e.message); }
+  </script>
+
+  <style>
+    :root {
+      --nv: #0A1628;
+      --nv2: #0D1E35;
+      --nv3: #112240;
+      --tl: #00BCD4;
+      --tl2: #00ACC1;
+      --ltl: #4DD0E1;
+      --gn: #00C853;
+      --am: #FFB300;
+      --rd: #FF5252;
+      --wh: #FFFFFF;
+      --ow: #EAF4FB;
+      --gy: #607D8B;
+      --lg: #CFD8DC;
+      --dk: #263238;
+      --gB: #4285F4;
+      --gR: #EA4335;
+      --gG: #34A853;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--nv);
+      color: var(--wh);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 56px;
+      background: rgba(10, 22, 40, .97);
+      border-bottom: 1px solid rgba(0, 188, 212, .15);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 200;
+    }
+
+    .nlogo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 17px;
+      background: linear-gradient(90deg, var(--tl), var(--ltl));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nbadge {
+      background: rgba(0, 188, 212, .12);
+      border: 1px solid rgba(0, 188, 212, .3);
+      color: var(--tl);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .nlinks {
+      display: flex;
+      gap: 2px;
+    }
+
+    .nlink {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--lg);
+      cursor: pointer;
+      border: none;
+      background: none;
+      transition: all .18s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .nlink:hover,
+    .nlink.on {
+      color: var(--wh);
+      background: rgba(0, 188, 212, .1);
+    }
+
+    .nlink.on {
+      color: var(--tl);
+    }
+
+    .sdot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gn);
+      box-shadow: 0 0 8px var(--gn);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 6px var(--gn);
+      }
+
+      50% {
+        box-shadow: 0 0 16px var(--gn);
+      }
+    }
+
+    .nclock {
+      font-size: 12px;
+      color: var(--gy);
+    }
+
+    /* LAYOUT */
+    main {
+      display: grid;
+      grid-template-columns: 208px 1fr;
+      min-height: calc(100vh - 56px);
+    }
+
+    aside {
+      background: var(--nv2);
+      border-right: 1px solid rgba(255, 255, 255, .05);
+      padding: 14px 0;
+    }
+
+    .ssec {
+      padding: 7px 16px 3px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--gy);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    .sitem {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--lg);
+      cursor: pointer;
+      transition: all .16s;
+      border-left: 3px solid transparent;
+    }
+
+    .sitem:hover {
+      color: var(--wh);
+      background: rgba(0, 188, 212, .05);
+    }
+
+    .sitem.on {
+      color: var(--tl);
+      background: rgba(0, 188, 212, .08);
+      border-left-color: var(--tl);
+    }
+
+    .sbadge {
+      margin-left: auto;
+      background: var(--rd);
+      color: var(--wh);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 10px;
+    }
+
+    /* CONTENT */
+    .content {
+      padding: 18px;
+      overflow-y: auto;
+      max-height: calc(100vh - 56px);
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.on {
+      display: block;
+    }
+
+    /* CARDS */
+    .sgrid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .sc {
+      background: var(--nv2);
+      border: 1px solid rgba(255, 255, 255, .05);
+      border-radius: 10px;
+      padding: 15px 16px;
+      position: relative;
+      overflow: hidden;
+      transition: transform .2s;
+    }
+
+    .sc:hover {
+      transform: translateY(-2px);
+    }
+
+    .sc::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--ac, var(--tl));
+    }
+
+    .slbl {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--gy);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .sval {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+
+    .ssub {
+      font-size: 11px;
+      color: var(--gy);
+    }
+
+    .strend {
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 3px;
+    }
+
+    .up {
+      color: var(--gn);
+    }
+
+    .dn {
+      color: var(--rd);
+    }
+
+    .wn {
+      color: var(--am);
+    }
+
+    /* PANELS */
+    .tc {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .panel {
+      background: var(--nv2);
+      border: 1px solid rgba(255, 255, 255, .05);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .ph {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, .05);
+    }
+
+    .ptitle {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .pb {
+      padding: 12px 14px;
+    }
+
+    .tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: rgba(0, 188, 212, .1);
+      color: var(--tl);
+    }
+
+    .tag.rd {
+      background: rgba(255, 82, 82, .12);
+      color: var(--rd);
+    }
+
+    .tag.gn {
+      background: rgba(0, 200, 83, .12);
+      color: var(--gn);
+    }
+
+    .tag.am {
+      background: rgba(255, 179, 0, .12);
+      color: var(--am);
+    }
+
+    /* MAP */
+    #gmap {
+      width: 100%;
+      height: 305px;
+      border-radius: 8px;
+    }
+
+    .mwrap {
+      position: relative;
+    }
+
+    .mleg {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      display: flex;
+      gap: 10px;
+      background: rgba(10, 22, 40, .9);
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 5px;
+      padding: 5px 11px;
+      font-size: 11px;
+      z-index: 10;
+    }
+
+    .ml {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--lg);
+    }
+
+    .mld {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* ALERTS */
+    .alist {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      max-height: 340px;
+      overflow-y: auto;
+    }
+
+    .ai {
+      background: var(--nv3);
+      border: 1px solid rgba(255, 255, 255, .05);
+      border-radius: 7px;
+      padding: 9px 11px;
+      cursor: pointer;
+      border-left: 3px solid var(--ac, var(--gy));
+      transition: background .16s;
+    }
+
+    .ai:hover {
+      background: rgba(255, 255, 255, .03);
+    }
+
+    .aiid {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--tl);
+      font-family: 'Syne', sans-serif;
+    }
+
+    .aitime {
+      font-size: 10px;
+      color: var(--gy);
+    }
+
+    .airte {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--lg);
+      margin-bottom: 2px;
+    }
+
+    .aiscore {
+      display: inline-flex;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(255, 82, 82, .15);
+      color: var(--rd);
+    }
+
+    .aiscore.am {
+      background: rgba(255, 179, 0, .15);
+      color: var(--am);
+    }
+
+    /* GEMINI BAR */
+    .gbar {
+      background: linear-gradient(135deg, rgba(0, 188, 212, .05), rgba(106, 27, 154, .05));
+      border: 1px solid rgba(0, 188, 212, .12);
+      border-radius: 10px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .gbh {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 15px;
+      border-bottom: 1px solid rgba(0, 188, 212, .08);
+    }
+
+    .glogo {
+      width: 25px;
+      height: 25px;
+      border-radius: 5px;
+      background: linear-gradient(135deg, #4285F4, #AD1457);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      font-family: 'Syne', sans-serif;
+      color: white;
+    }
+
+    .gtitle {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .gsub {
+      font-size: 11px;
+      color: var(--gy);
+    }
+
+    .gbody {
+      padding: 12px 15px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+    }
+
+    .gc {
+      background: var(--nv2);
+      border: 1px solid rgba(255, 255, 255, .05);
+      border-radius: 7px;
+      padding: 9px 11px;
+    }
+
+    .gclbl {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--gy);
+      letter-spacing: .4px;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .gcval {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 2px;
+    }
+
+    .gcdesc {
+      font-size: 11px;
+      color: var(--gy);
+      line-height: 1.5;
+    }
+
+    /* WEATHER BADGE */
+    .wx-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0, 188, 212, .08);
+      border: 1px solid rgba(0, 188, 212, .2);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 11px;
+      color: var(--ltl);
+      margin-top: 4px;
+    }
+
+    .wx-badge.warn {
+      background: rgba(255, 82, 82, .08);
+      border-color: rgba(255, 82, 82, .25);
+      color: var(--rd);
+    }
+
+    /* TABLE */
+    .tbl {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .tbl th {
+      text-align: left;
+      padding: 7px 10px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--gy);
+      letter-spacing: .4px;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(255, 255, 255, .05);
+    }
+
+    .tbl td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, .03);
+      color: var(--lg);
+    }
+
+    .tbl tr:last-child td {
+      border-bottom: none;
+    }
+
+    .tbl tr:hover td {
+      background: rgba(255, 255, 255, .02);
+    }
+
+    .bdg {
+      display: inline-flex;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .bok {
+      background: rgba(0, 200, 83, .1);
+      color: var(--gn);
+    }
+
+    .brk {
+      background: rgba(255, 179, 0, .1);
+      color: var(--am);
+    }
+
+    .bct {
+      background: rgba(255, 82, 82, .1);
+      color: var(--rd);
+    }
+
+    .btl {
+      background: rgba(0, 188, 212, .1);
+      color: var(--tl);
+    }
+
+    /* BUTTONS */
+    .btn {
+      padding: 7px 16px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all .16s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .btnp {
+      background: var(--tl);
+      color: var(--nv);
+    }
+
+    .btnp:hover {
+      background: var(--ltl);
+      transform: translateY(-1px);
+    }
+
+    .btnd {
+      background: var(--rd);
+      color: white;
+    }
+
+    .btnd:hover {
+      opacity: .85;
+    }
+
+    .btng {
+      background: rgba(0, 188, 212, .1);
+      color: var(--tl);
+      border: 1px solid rgba(0, 188, 212, .25);
+    }
+
+    .btng:hover {
+      background: rgba(0, 188, 212, .18);
+    }
+
+    .sm {
+      padding: 4px 11px;
+      font-size: 11px;
+    }
+
+    /* MODAL */
+    .mov {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .78);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+      backdrop-filter: blur(4px);
+    }
+
+    .mov.on {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--nv2);
+      border: 1px solid rgba(0, 188, 212, .2);
+      border-radius: 12px;
+      padding: 24px 26px;
+      width: 500px;
+      max-width: 92vw;
+      position: relative;
+      animation: mi .2s ease;
+    }
+
+    @keyframes mi {
+      from {
+        transform: translateY(13px);
+        opacity: 0;
+      }
+    }
+
+    .mtitle {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--tl);
+      margin-bottom: 2px;
+    }
+
+    .msub {
+      font-size: 12px;
+      color: var(--gy);
+      margin-bottom: 14px;
+    }
+
+    .mr {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, .05);
+      font-size: 13px;
+    }
+
+    .mr:last-of-type {
+      border-bottom: none;
+    }
+
+    .mk {
+      color: var(--gy);
+      font-weight: 500;
+    }
+
+    .mv {
+      color: var(--wh);
+      font-weight: 600;
+      text-align: right;
+      max-width: 275px;
+    }
+
+    .mv.rd {
+      color: var(--rd);
+    }
+
+    .mv.am {
+      color: var(--am);
+    }
+
+    .mv.gn {
+      color: var(--gn);
+    }
+
+    .mv.tl {
+      color: var(--tl);
+    }
+
+    .macts {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      justify-content: flex-end;
+    }
+
+    .mx {
+      position: absolute;
+      top: 13px;
+      right: 15px;
+      background: none;
+      border: none;
+      color: var(--gy);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    /* LIVE DATA STRIP */
+    .live-strip {
+      background: rgba(0, 188, 212, .05);
+      border: 1px solid rgba(0, 188, 212, .1);
+      border-radius: 7px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+      font-size: 11px;
+      color: var(--ltl);
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .ls-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .ls-label {
+      color: var(--gy);
+      font-weight: 600;
+    }
+
+    /* ROUTE OPTS */
+    .ropt {
+      background: var(--nv3);
+      border: 1px solid rgba(255, 255, 255, .05);
+      border-radius: 7px;
+      padding: 11px 13px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: border-color .16s;
+    }
+
+    .ropt:hover {
+      border-color: rgba(0, 188, 212, .3);
+    }
+
+    .ropt.sel {
+      border-color: var(--tl);
+      background: rgba(0, 188, 212, .06);
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 400;
+      background: var(--gn);
+      color: var(--nv);
+      padding: 10px 17px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      display: none;
+      animation: ti .22s ease;
+      min-width: 190px;
+      max-width: 340px;
+    }
+
+    .toast.on {
+      display: block;
+    }
+
+    @keyframes ti {
+      from {
+        transform: translateY(14px);
+        opacity: 0;
+      }
+    }
+
+    /* THINKING */
+    .think {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .think span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--tl);
+      animation: th 1.2s infinite;
+    }
+
+    .think span:nth-child(2) {
+      animation-delay: .2s;
+    }
+
+    .think span:nth-child(3) {
+      animation-delay: .4s;
+    }
+
+    @keyframes th {
+
+      0%,
+      80%,
+      100% {
+        transform: scale(.6);
+        opacity: .3;
+      }
+
+      40% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* BANNER */
+    .banner {
+      display: none;
+      background: rgba(255, 179, 0, .07);
+      border: 1px solid rgba(255, 179, 0, .22);
+      border-radius: 8px;
+      padding: 9px 13px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: var(--am);
+    }
+
+    .banner.on {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 188, 212, .2);
+      border-radius: 2px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="nlogo">&#x2B21; ChainGuard AI</span>
+      <span class="nbadge">LIVE MVP</span>
+    </div>
+    <div class="nlinks">
+      <button class="nlink on" onclick="sv('dashboard')">Dashboard</button>
+      <button class="nlink" onclick="sv('alerts')">Alerts <span
+          style="color:var(--rd);font-size:10px">&#9679;</span></button>
+      <button class="nlink" onclick="sv('optimizer')">Route Optimizer</button>
+      <button class="nlink" onclick="sv('analytics')">Analytics</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="sdot"></div>
+      <span class="nclock" id="clk"></span>
+    </div>
+  </nav>
+
+  <main>
+    <aside>
+      <div class="ssec">Monitor</div>
+      <div class="sitem on" onclick="sv('dashboard')">&#9672; Live Map</div>
+      <div class="sitem" onclick="sv('alerts')">&#9889; Active Alerts <span class="sbadge" id="sbc">5</span></div>
+      <div class="sitem" onclick="sv('optimizer')">&#8853; Reroute Engine</div>
+      <div class="ssec">Analyse</div>
+      <div class="sitem" onclick="sv('analytics')">&#9638; Analytics</div>
+      <div class="sitem" onclick="sv('log')">&#9776; Decision Log</div>
+      <div class="ssec">System</div>
+      <div class="sitem">&#9676; Integrations</div>
+    </aside>
+
+    <div class="content">
+      <div class="banner" id="fbBanner">&#9888; Firebase not configured — running in demo mode. Add config values to
+        index.html.</div>
+
+      <!-- ══ DASHBOARD ══ -->
+      <div id="view-dashboard" class="view on">
+        <div class="sgrid">
+          <div class="sc" style="--ac:var(--tl)">
+            <div class="slbl">Active Shipments</div>
+            <div class="sval" style="color:var(--tl)">1,847</div>
+            <div class="ssub">Across 34 countries</div>
+            <div class="strend up">&#8593; +43 since yesterday</div>
+          </div>
+          <div class="sc" style="--ac:var(--rd)">
+            <div class="slbl">At Risk</div>
+            <div class="sval" style="color:var(--rd)" id="srisk">5</div>
+            <div class="ssub">Require attention</div>
+            <div class="strend dn">&#9650; 2 escalated P1</div>
+          </div>
+          <div class="sc" style="--ac:var(--gn)">
+            <div class="slbl">On-Time Rate</div>
+            <div class="sval" style="color:var(--gn)">98.7%</div>
+            <div class="ssub">7-day rolling avg</div>
+            <div class="strend up">&#8593; +0.3% vs last week</div>
+          </div>
+          <div class="sc" style="--ac:var(--am)">
+            <div class="slbl">Avg Risk Score</div>
+            <div class="sval" style="color:var(--am)" id="savg">31.4</div>
+            <div class="ssub">Fleet-wide (0&#8211;100)</div>
+            <div class="strend wn">&#9650; +4.2 elevated today</div>
+          </div>
+        </div>
+
+        <!-- Live weather strip -->
+        <div class="live-strip" id="weatherStrip">
+          <div class="ls-item"><span class="ls-label">Live Weather:</span><span id="wx-loading">Fetching from
+              Open-Meteo...</span></div>
+        </div>
+
+        <div class="tc">
+          <div class="panel">
+            <div class="ph">
+              <span class="ptitle">Live Shipment Map</span>
+              <div style="display:flex;gap:8px;align-items:center">
+                <div class="think"><span></span><span></span><span></span></div>
+                <span style="font-size:11px;color:var(--gy)">Gemini 2.0 Flash</span>
+              </div>
+            </div>
+            <div class="pb" style="padding:10px">
+              <div class="mwrap">
+                <div id="gmap"></div>
+                <div class="mleg">
+                  <div class="ml">
+                    <div class="mld" style="background:var(--gn)"></div>On Track
+                  </div>
+                  <div class="ml">
+                    <div class="mld" style="background:var(--am)"></div>At Risk
+                  </div>
+                  <div class="ml">
+                    <div class="mld" style="background:var(--rd)"></div>Critical
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="ph">
+              <span class="ptitle">Active Alerts</span>
+              <span class="tag rd" id="actag">5 Active</span>
+            </div>
+            <div class="pb" style="padding:10px">
+              <div class="alist" id="alist"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gbar">
+          <div class="gbh">
+            <div class="glogo">G</div>
+            <div>
+              <div class="gtitle">Gemini 2.0 Flash &#8212; Real-Time Intelligence</div>
+              <div class="gsub">Firebase Realtime DB &#183; Open-Meteo weather &#183; Last sync <span
+                  id="gtime">&#8212;</span></div>
+            </div>
+            <button class="btn btng sm" style="margin-left:auto" onclick="fleetScan()">Re-Analyse Fleet</button>
+          </div>
+          <div class="gbody">
+            <div class="gc">
+              <div class="gclbl">72-hr Risk Outlook</div>
+              <div class="gcval" style="color:var(--am)" id="gi1">ELEVATED</div>
+              <div class="gcdesc" id="gd1">Checking live weather conditions...</div>
+            </div>
+            <div class="gc">
+              <div class="gclbl">Top Bottleneck</div>
+              <div class="gcval" style="color:var(--rd)" id="gi2">Port Klang</div>
+              <div class="gcdesc" id="gd2">Berth occupancy 94%. Recommend divert to Tanjung Pelepas.</div>
+            </div>
+            <div class="gc">
+              <div class="gclbl">Auto-Reroutes Today</div>
+              <div class="gcval" style="color:var(--gn)" id="gi3">12</div>
+              <div class="gcdesc">Est. $84,200 saved. Feedback loop updated.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="ph">
+            <span class="ptitle">All Shipments</span>
+            <span class="tag gn">Firebase Live</span>
+          </div>
+          <div class="pb" style="padding:0">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Route</th>
+                  <th>Carrier</th>
+                  <th>ETA</th>
+                  <th>Risk</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="stbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ALERTS ══ -->
+      <div id="view-alerts" class="view">
+        <h2 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:3px">Active Disruption
+          Alerts</h2>
+        <p style="font-size:13px;color:var(--gy);margin-bottom:14px">Gemini 2.0 Flash &#183; Open-Meteo live weather
+          &#183; Firebase DB</p>
+        <div id="fallerts" style="display:flex;flex-direction:column;gap:11px"></div>
+      </div>
+
+      <!-- ══ OPTIMIZER ══ -->
+      <div id="view-optimizer" class="view">
+        <h2 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:3px">Route Optimizer</h2>
+        <p style="font-size:13px;color:var(--gy);margin-bottom:14px">Gemini 2.0 Flash &#183; Google Maps JS &#183;
+          Carbon-Aware Scoring</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="panel">
+            <div class="ph"><span class="ptitle">At-Risk Shipments</span></div>
+            <div class="pb">
+              <div id="oshlist" style="display:flex;flex-direction:column;gap:8px"></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="ph">
+              <span class="ptitle">Optimised Routes</span>
+              <span class="tag" id="ostag">Select shipment</span>
+            </div>
+            <div class="pb" id="routeopts">
+              <div style="color:var(--gy);font-size:13px;text-align:center;padding:34px 0">
+                Select a shipment to compute optimised routes
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ANALYTICS ══ -->
+      <div id="view-analytics" class="view">
+        <h2 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:3px">Performance Analytics
+        </h2>
+        <p style="font-size:13px;color:var(--gy);margin-bottom:14px">Firebase Realtime DB &#183; 30-day rolling</p>
+        <div class="sgrid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="sc" style="--ac:var(--gn)">
+            <div class="slbl">Total Savings (30d)</div>
+            <div class="sval" style="color:var(--gn)">$2.4M</div>
+            <div class="ssub">Across 347 reroutes</div>
+            <div class="strend up">&#8593; ROI 1,840%</div>
+          </div>
+          <div class="sc" style="--ac:var(--tl)">
+            <div class="slbl">Avg Detection Time</div>
+            <div class="sval" style="color:var(--tl)">4.2 min</div>
+            <div class="ssub">Data to alert</div>
+            <div class="strend up">&#8595; -1.8 min vs baseline</div>
+          </div>
+          <div class="sc" style="--ac:var(--am)">
+            <div class="slbl">CO2 Saved (30d)</div>
+            <div class="sval" style="color:var(--am)">18.4t</div>
+            <div class="ssub">Via carbon-aware routing</div>
+            <div class="strend up">&#8593; 12% improvement</div>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:14px">
+          <div class="ph"><span class="ptitle">Disruption Events &#8212; Last 30 Days</span></div>
+          <div class="pb">
+            <div id="bchart" style="display:flex;align-items:flex-end;gap:10px;height:140px;
+        border-bottom:1px solid rgba(255,255,255,.06);padding:0 8px"></div>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:12px">
+          <div class="ph"><span class="ptitle">Top Disruption Causes (Firebase)</span></div>
+          <div class="pb">
+            <div id="clist" style="display:flex;flex-direction:column;gap:9px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ DECISION LOG ══ -->
+      <div id="view-log" class="view">
+        <h2 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:3px">Decision Log</h2>
+        <p style="font-size:13px;color:var(--gy);margin-bottom:14px">All rerouting decisions stored in Firebase Realtime
+          DB &#183; live sync</p>
+        <div class="panel">
+          <div class="ph"><span class="ptitle">Reroute History</span><span class="tag gn">Firebase Live</span></div>
+          <div class="pb" style="padding:0">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Shipment</th>
+                  <th>Route</th>
+                  <th>Action</th>
+                  <th>Score</th>
+                  <th>Weather</th>
+                  <th>Outcome</th>
+                </tr>
+              </thead>
+              <tbody id="logtbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- MODAL -->
+  <div class="mov" id="modal">
+    <div class="modal">
+      <button class="mx" onclick="closeModal()">&#10005;</button>
+      <div class="mtitle" id="mid">SHP-XXXXX</div>
+      <div class="msub">Gemini 2.0 Flash &#183; Live weather from Open-Meteo &#183; Firebase DB</div>
+      <div id="mbody"></div>
+      <div class="macts">
+        <button class="btn btng" onclick="closeModal()">Dismiss</button>
+        <button class="btn btnp" onclick="doReroute()">&#10003; Execute Reroute</button>
+        <button class="btn btnd" onclick="doEscalate()">&#9888; Escalate P1</button>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+     STEP 2 — REPLACE YOUR_GOOGLE_MAPS_API_KEY
+     Get free from: console.cloud.google.com → Credentials
+     Enable: Maps JavaScript API
+     (Free $200/month credit — more than enough)
+═══════════════════════════════════════════════════════════════ -->
+  <script>window.initMap = function () { }</script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyACD4PTZhaU6uMOJKpZsCbRYuyqyrFaZyo&callback=initMap" async
+    defer></script>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════════
+    // STEP 3 — PASTE YOUR GEMINI API KEY
+    // Get FREE from: aistudio.google.com → Get API Key
+    // Free tier: 1,500 calls/day — no credit card needed
+    // IMPORTANT: In Google Cloud Console, restrict this key to your
+    // Firebase Hosting domain (e.g. your-project.web.app) for safety
+    // ═══════════════════════════════════════════════════════════════
+    const GEMINI_KEY = "AIzaSyCkQb7XeakgoDB_66dyMb5l_2u8lYsr9bA";
+    const GEMINI_MODEL = "gemini-2.0-flash"; // Free tier — 1,500 req/day
+
+    // ── SHIPMENT DATA ──────────────────────────────────────────────
+    const SHIPS = [
+      { id: 'SHP-9814', from: 'Shanghai', to: 'Rotterdam', via: 'Suez Canal', carrier: 'Maersk', eta: 'Apr 28', score: 92, st: 'critical', lat: 29.0, lng: 41.0, cause: 'Tropical storm + port congestion' },
+      { id: 'SHP-9801', from: 'Singapore', to: 'Hamburg', via: 'Malacca Strait', carrier: 'MSC', eta: 'Apr 25', score: 78, st: 'at-risk', lat: 5.3, lng: 100.3, cause: 'Port Klang berth occupancy 94%' },
+      { id: 'SHP-9788', from: 'Dubai', to: 'Felixstowe', via: 'Suez Canal', carrier: 'CMA CGM', eta: 'Apr 27', score: 65, st: 'at-risk', lat: 25.2, lng: 55.3, cause: 'Customs clearance delay +4hrs' },
+      { id: 'SHP-9774', from: 'Busan', to: 'Los Angeles', via: 'Pacific', carrier: 'Evergreen', eta: 'May 2', score: 22, st: 'on-time', lat: 35.1, lng: 129.0, cause: '' },
+      { id: 'SHP-9766', from: 'Felixstowe', to: 'New York', via: 'Atlantic', carrier: 'Hapag-Lloyd', eta: 'Apr 30', score: 18, st: 'on-time', lat: 51.9, lng: 1.3, cause: '' },
+      { id: 'SHP-9752', from: 'Mumbai', to: 'Barcelona', via: 'Suez Canal', carrier: 'Maersk', eta: 'Apr 29', score: 85, st: 'critical', lat: 19.0, lng: 72.8, cause: 'Bay of Aden wind advisory 45kt' },
+      { id: 'SHP-9741', from: 'Guangzhou', to: 'Dubai', via: 'Malacca Strait', carrier: 'COSCO', eta: 'Apr 26', score: 12, st: 'on-time', lat: 23.1, lng: 113.3, cause: '' },
+      { id: 'SHP-9730', from: 'New York', to: 'Liverpool', via: 'Atlantic', carrier: 'MSC', eta: 'May 1', score: 31, st: 'on-time', lat: 40.7, lng: -74.0, cause: '' },
+    ];
+
+    // Port coordinates for Open-Meteo weather lookup
+    const PORT_COORDS = {
+      'Shanghai': { lat: 31.23, lon: 121.47 }, 'Singapore': { lat: 1.30, lon: 103.78 },
+      'Dubai': { lat: 25.20, lon: 55.27 }, 'Mumbai': { lat: 18.94, lon: 72.84 },
+      'Busan': { lat: 35.18, lon: 129.08 }, 'Guangzhou': { lat: 23.13, lon: 113.26 },
+      'Felixstowe': { lat: 51.96, lon: 1.35 }, 'New York': { lat: 40.69, lon: -74.04 },
+      'Rotterdam': { lat: 51.92, lon: 4.48 }, 'Hamburg': { lat: 53.58, lon: 9.87 },
+      'Barcelona': { lat: 41.39, lon: 2.17 }, 'Los Angeles': { lat: 33.74, lon: -118.26 },
+      'Liverpool': { lat: 53.46, lon: -3.01 },
+    };
+
+    const WX_CACHE = {}; // Cache weather so we don't re-fetch same port
+    let curShip = null, fbOK = false;
+    let liveWeatherData = {}; // Stores latest weather for each at-risk origin
+
+    // ── CLOCK ──────────────────────────────────────────────────────
+    function tick() {
+      const t = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      document.getElementById('clk').textContent = t + ' UTC';
+      document.getElementById('gtime').textContent = t;
+    }
+    setInterval(tick, 1000); tick();
+
+    // ── FIREBASE ───────────────────────────────────────────────────
+    document.addEventListener('fbReady', () => {
+      try {
+        window._onValue(window._ref(window._db, '.info/connected'), snap => {
+          fbOK = snap.val() === true;
+          if (fbOK) {
+            document.getElementById('fbBanner').classList.remove('on');
+            seedFirebase();
+            listenFirebase();
+          } else {
+            document.getElementById('fbBanner').classList.add('on');
+          }
+        });
+      } catch (e) {
+        document.getElementById('fbBanner').classList.add('on');
+      }
+    });
+
+    function seedFirebase() {
+      const db = window._db, r = window._ref, s = window._set, g = window._get;
+      g(r(db, 'shipments')).then(snap => {
+        if (!snap.exists()) {
+          const d = {};
+          SHIPS.forEach(sh => { d[sh.id] = { ...sh, lastUpdated: Date.now() }; });
+          s(r(db, 'shipments'), d);
+          s(r(db, 'analytics'), {
+            totalSavings: 2400000, avgDetectionMin: 4.2,
+            co2Saved: 18.4, reroutesToday: 12, ts: Date.now()
+          });
+          s(r(db, 'disruptions'), {
+            'Apr 1': 8, 'Apr 7': 12, 'Apr 14': 7, 'Apr 21': 14, 'Today': 5
+          });
+        }
+      });
+    }
+
+    function listenFirebase() {
+      const db = window._db, r = window._ref;
+      window._onValue(r(db, 'decisions'), snap => {
+        renderLog(Object.values(snap.val() || {}));
+      });
+      window._onValue(r(db, 'analytics'), snap => {
+        if (snap.val()) document.getElementById('gi3').textContent = snap.val().reroutesToday || 12;
+      });
+      window._onValue(r(db, 'disruptions'), snap => {
+        if (snap.val()) renderBarChart(snap.val());
+      });
+    }
+
+    function writeFB(ship, action, outcome, weather) {
+      if (!window._fbReady || !fbOK) return;
+      const db = window._db, r = window._ref;
+      window._push(r(db, 'decisions'), {
+        time: new Date().toISOString(),
+        shipId: ship.id, route: ship.from + ' > ' + ship.to,
+        action, score: ship.score, outcome,
+        weather: weather || 'N/A'
+      });
+      // Update reroutes counter
+      window._get(r(db, 'analytics/reroutesToday')).then(s => {
+        window._set(r(db, 'analytics/reroutesToday'), (s.val() || 12) + 1);
+      });
+      // Update shipment status in Firebase
+      window._set(r(db, 'shipments/' + ship.id + '/lastAction'), action);
+      window._set(r(db, 'shipments/' + ship.id + '/lastUpdated'), Date.now());
+    }
+
+    // ── OPEN-METEO WEATHER (100% FREE, NO KEY NEEDED) ─────────────
+    async function fetchWeather(city) {
+      if (WX_CACHE[city]) return WX_CACHE[city];
+      const coords = PORT_COORDS[city];
+      if (!coords) return null;
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,wind_speed_10m,weather_code,visibility&wind_speed_unit=kmh`;
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const data = await res.json();
+        const c = data.current;
+        const wCode = c.weather_code || 0;
+        const isStorm = wCode >= 80;
+        const isRain = wCode >= 60 && wCode < 80;
+        const desc = wCode === 0 ? 'Clear' : wCode < 10 ? 'Mainly clear' :
+          wCode < 50 ? 'Foggy/hazy' : isRain ? 'Rain' : isStorm ? 'Storm' : 'Cloudy';
+        const result = {
+          city, temp: Math.round(c.temperature_2m),
+          windKmh: Math.round(c.wind_speed_10m || 0),
+          desc, isAlert: isStorm || (c.wind_speed_10m || 0) > 50,
+          raw: c
+        };
+        WX_CACHE[city] = result;
+        liveWeatherData[city] = result;
+        return result;
+      } catch (e) { return null; }
+    }
+
+    async function loadWeatherStrip() {
+      const atRisk = SHIPS.filter(s => s.st !== 'on-time');
+      const wxItems = [];
+      for (const ship of atRisk.slice(0, 3)) {
+        const wx = await fetchWeather(ship.from);
+        if (wx) {
+          wxItems.push(`<div class="ls-item ${wx.isAlert ? 'warn' : ''}">
+        <span class="ls-label">${wx.city}:</span>
+        <span>${wx.desc} ${wx.temp}&#176;C Wind ${wx.windKmh}km/h ${wx.isAlert ? '&#9888;' : '&#9989;'}</span>
+      </div>`);
+        }
+      }
+      if (wxItems.length > 0) {
+        document.getElementById('weatherStrip').innerHTML =
+          `<span class="ls-label" style="margin-right:4px">&#127760; Live Weather (Open-Meteo):</span>` +
+          wxItems.join('');
+        // Update Gemini insights panel with real weather
+        const firstWx = Object.values(liveWeatherData)[0];
+        if (firstWx) {
+          document.getElementById('gd1').textContent =
+            firstWx.isAlert
+              ? `${firstWx.city}: ${firstWx.desc}, wind ${firstWx.windKmh}km/h — storm risk detected on active routes`
+              : `Conditions moderate at key ports. ${firstWx.city}: ${firstWx.desc}, ${firstWx.temp}°C. Monitoring 14 active Suez routes.`;
+          document.getElementById('gi1').textContent = firstWx.isAlert ? 'HIGH' : 'MODERATE';
+          document.getElementById('gi1').style.color = firstWx.isAlert ? 'var(--rd)' : 'var(--am)';
+        }
+      }
+    }
+
+    // ── GEMINI 2.0 FLASH ──────────────────────────────────────────
+    async function callGemini(prompt) {
+      if (!GEMINI_KEY || GEMINI_KEY === 'PASTE_YOUR_GEMINI_API_KEY') {
+        throw new Error('Gemini API key not set');
+      }
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.2, maxOutputTokens: 400 }
+          })
+        }
+      );
+      if (!res.ok) throw new Error('Gemini API error ' + res.status);
+      const d = await res.json();
+      const raw = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      return raw.replace(/```json|```/g, '').trim();
+    }
+
+    // ── GOOGLE MAP ─────────────────────────────────────────────────
+    window.initMap = function () {
+      if (!window.google?.maps) { renderMapFallback(); return; }
+      const map = new google.maps.Map(document.getElementById('gmap'), {
+        center: { lat: 20, lng: 50 }, zoom: 2, mapTypeId: 'roadmap',
+        styles: [
+          { elementType: 'geometry', stylers: [{ color: '#0d1e35' }] },
+          { elementType: 'labels.text.fill', stylers: [{ color: '#607d8b' }] },
+          { elementType: 'labels.text.stroke', stylers: [{ color: '#0a1628' }] },
+          { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#071524' }] },
+          { featureType: 'road', stylers: [{ visibility: 'simplified' }, { color: '#1a3050' }] },
+          { featureType: 'administrative.country', elementType: 'geometry.stroke', stylers: [{ color: '#1a3a5c' }] },
+        ]
+      });
+      const DESTS = {
+        'Rotterdam': { lat: 51.9, lng: 4.1 }, 'Hamburg': { lat: 53.5, lng: 9.9 },
+        'Felixstowe': { lat: 51.9, lng: 1.3 }, 'Barcelona': { lat: 41.4, lng: 2.2 },
+        'Los Angeles': { lat: 33.7, lng: -118.2 }, 'New York': { lat: 40.7, lng: -74.0 },
+        'Liverpool': { lat: 53.4, lng: -3.0 }, 'Dubai': { lat: 25.2, lng: 55.3 }
+      };
+      SHIPS.forEach(ship => {
+        const col = ship.st === 'critical' ? '#FF5252' : ship.st === 'at-risk' ? '#FFB300' : '#00C853';
+        const mk = new google.maps.Marker({
+          position: { lat: ship.lat, lng: ship.lng }, map, title: ship.id,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE, scale: ship.st !== 'on-time' ? 9 : 7,
+            fillColor: col, fillOpacity: 1, strokeColor: '#fff', strokeWeight: 1.5
+          }
+        });
+        const iw = new google.maps.InfoWindow({
+          content:
+            `<div style="background:#0d1e35;color:#fff;padding:8px 10px;border-radius:6px;font-family:sans-serif;font-size:12px;min-width:155px">
+        <div style="font-weight:700;color:#00BCD4;margin-bottom:3px">${ship.id}</div>
+        <div>${ship.from} &rarr; ${ship.to}</div>
+        <div style="color:#607d8b">${ship.carrier} &middot; ETA ${ship.eta}</div>
+        <div style="margin-top:3px">Risk: <span style="color:${col};font-weight:700">${ship.score}/100</span></div>
+        ${ship.cause ? `<div style="color:#FFB300;font-size:11px;margin-top:2px">${ship.cause}</div>` : ''}
+      </div>`
+        });
+        mk.addListener('click', () => { iw.open(map, mk); openAlert(ship); });
+        if (ship.st !== 'on-time' && DESTS[ship.to]) {
+          new google.maps.Polyline({
+            path: [{ lat: ship.lat, lng: ship.lng }, DESTS[ship.to]],
+            geodesic: true, strokeColor: col, strokeOpacity: .45, strokeWeight: 1.5, map,
+            icons: [{ icon: { path: google.maps.SymbolPath.FORWARD_OPEN_ARROW, scale: 2 }, offset: '50%' }]
+          });
+        }
+      });
+    };
+
+    function renderMapFallback() {
+      const el = document.getElementById('gmap');
+      el.style.cssText = 'background:linear-gradient(180deg,#0A1E32,#061422);display:flex;align-items:center;justify-content:center;border-radius:8px;';
+      el.innerHTML = `<div style="text-align:center;color:#607d8b;font-size:13px;padding:20px">
+    <div style="font-size:26px;margin-bottom:8px">&#128506;</div>
+    Add your Google Maps API key to enable the live map<br>
+    <span style="font-size:11px">Free via console.cloud.google.com</span>
+  </div>`;
+    }
+    setTimeout(() => { if (!window.google?.maps) renderMapFallback(); }, 2000);
+
+    // ── RENDER HELPERS ─────────────────────────────────────────────
+    const sc = s => s.st === 'on-time' ? 'bok' : s.score > 80 ? 'bct' : 'brk';
+    const col = s => s.score > 80 ? 'var(--rd)' : s.score > 60 ? 'var(--am)' : 'var(--gn)';
+    const enc = s => JSON.stringify(s).replace(/'/g, "\\'");
+
+    function renderAlerts() {
+      const ar = SHIPS.filter(s => s.st !== 'on-time');
+      document.getElementById('sbc').textContent = ar.length;
+      document.getElementById('actag').textContent = ar.length + ' Active';
+      document.getElementById('srisk').textContent = ar.length;
+      document.getElementById('alist').innerHTML = ar.map(s => `
+    <div class="ai" style="--ac:${s.score > 80 ? 'var(--rd)' : 'var(--am)'}" onclick='openAlert(${enc(s)})'>
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span class="aiid">${s.id}</span>
+        <span class="aitime">${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+      </div>
+      <div class="airte">${s.from} &rarr; ${s.to} &middot; ${s.carrier}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px">
+        <span style="font-size:11px;color:var(--gy)">${s.cause.substring(0, 48)}...</span>
+        <span class="aiscore ${s.score < 80 ? 'am' : ''}">${s.score}</span>
+      </div>
+    </div>`).join('');
+    }
+
+    function renderFullAlerts() {
+      const ar = SHIPS.filter(s => s.st !== 'on-time');
+      document.getElementById('fallerts').innerHTML = ar.map(s => `
+    <div class="panel" style="border-left:4px solid ${s.score > 80 ? 'var(--rd)' : 'var(--am)'}">
+      <div class="ph">
+        <div>
+          <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:${s.score > 80 ? 'var(--rd)' : 'var(--am)'}">${s.id}</span>
+          <span style="margin-left:9px;font-size:12px;color:var(--gy)">${s.from} &rarr; ${s.to} &middot; ${s.carrier} &middot; ETA ${s.eta}</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <span class="tag ${s.score > 80 ? 'rd' : 'am'}">Risk ${s.score}/100</span>
+          <button class="btn btnp sm" onclick='openAlert(${enc(s)})'>Analyse with Gemini</button>
+        </div>
+      </div>
+      <div class="pb">
+        <div style="font-size:13px;color:var(--lg);margin-bottom:7px">${s.cause}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11px;background:rgba(255,255,255,.05);padding:3px 9px;border-radius:4px">Via: ${s.via}</span>
+          <span style="font-size:11px;background:rgba(255,255,255,.05);padding:3px 9px;border-radius:4px">ETA: ${s.eta}</span>
+          ${liveWeatherData[s.from] ? `<span style="font-size:11px;background:rgba(0,188,212,.08);color:var(--ltl);padding:3px 9px;border-radius:4px">
+            ${s.from} weather: ${liveWeatherData[s.from].desc} ${liveWeatherData[s.from].temp}&#176;C Wind ${liveWeatherData[s.from].windKmh}km/h
+          </span>` : ''}
+        </div>
+      </div>
+    </div>`).join('');
+    }
+
+    function renderTable() {
+      document.getElementById('stbody').innerHTML = SHIPS.map(s => `
+    <tr>
+      <td style="color:var(--tl);font-weight:700;font-family:'Syne',sans-serif">${s.id}</td>
+      <td>${s.from} &rarr; ${s.to}</td>
+      <td>${s.carrier}</td>
+      <td>${s.eta}</td>
+      <td><span style="font-weight:700;color:${col(s)}">${s.score}</span></td>
+      <td><span class="bdg ${sc(s)}">${s.st.replace('-', ' ')}</span></td>
+      <td>${s.st !== 'on-time'
+          ? `<button class="btn btng sm" onclick='openAlert(${enc(s)})'>Analyse</button>`
+          : '<span style="color:var(--gy);font-size:11px">&#8212;</span>'}</td>
+    </tr>`).join('');
+    }
+
+    function renderOptimizer() {
+      document.getElementById('oshlist').innerHTML = SHIPS.filter(s => s.st !== 'on-time').map(s => `
+    <div class="ropt" onclick="pickShip('${s.id}',this)">
+      <div>
+        <div style="font-weight:700;font-size:13px;margin-bottom:2px">${s.id}</div>
+        <div style="font-size:11px;color:var(--gy)">${s.from} &rarr; ${s.to}</div>
+        ${liveWeatherData[s.from] ? `<div style="font-size:10px;color:${liveWeatherData[s.from].isAlert ? 'var(--rd)' : 'var(--gn)'}">
+          &#127760; ${liveWeatherData[s.from].desc} ${liveWeatherData[s.from].windKmh}km/h
+        </div>` : ''}
+      </div>
+      <span class="tag ${s.score > 80 ? 'rd' : 'am'}">Risk ${s.score}</span>
+    </div>`).join('');
+    }
+
+    function pickShip(id, el) {
+      document.querySelectorAll('#oshlist .ropt').forEach(e => e.classList.remove('sel'));
+      el.classList.add('sel');
+      const s = SHIPS.find(x => x.id === id);
+      document.getElementById('ostag').textContent = id;
+      const wx = liveWeatherData[s.from];
+      const co2Label = wx?.isAlert ? '-12% CO2 (storm bypass)' : '-8% CO2';
+      document.getElementById('routeopts').innerHTML =
+        `<div style="font-size:12px;color:var(--gy);margin-bottom:9px">
+      Gemini 2.0 Flash &middot; Carbon-aware scoring
+      ${wx ? `&middot; Live: ${s.from} ${wx.desc} ${wx.windKmh}km/h` : ''}
+    </div>` +
+        [
+          { name: 'Current Route', via: `Via ${s.via}`, eta: '+0 hr', cost: 'Baseline', co2: 'Baseline', badge: 'Current' },
+          { name: 'Recommended Alt', via: 'Cape of Good Hope (storm bypass)', eta: '+22 hr', cost: '-$340', co2: co2Label, badge: 'Best Cost' },
+          { name: 'Express Air', via: 'Air freight partial leg', eta: '-36 hr', cost: '+$4,200', co2: '+310% CO2', badge: 'Fastest' },
+        ].map((r, i) => `
+    <div class="ropt ${i === 1 ? 'sel' : ''}"
+      onclick="this.closest('#routeopts').querySelectorAll('.ropt').forEach(e=>e.classList.remove('sel'));this.classList.add('sel')">
+      <div>
+        <div style="font-weight:700;font-size:13px;margin-bottom:2px">${r.name}</div>
+        <div style="font-size:11px;color:var(--gy)">${r.via}</div>
+        <div style="font-size:11px;color:var(--gn)">${r.co2}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;font-weight:700;margin-bottom:2px;
+          color:${r.eta.startsWith('-') ? 'var(--gn)' : r.eta === '+0 hr' ? 'var(--lg)' : 'var(--am)'}">${r.eta}</div>
+        <div style="font-size:11px;color:var(--gy)">${r.cost}</div>
+        <span class="tag ${i === 1 ? 'gn' : ''}" style="font-size:9px">${r.badge}</span>
+      </div>
+    </div>`).join('') +
+        `<button class="btn btnp" style="width:100%;margin-top:11px"
+      onclick="confirmRoute('${id}')">&#10003; Execute Selected Route</button>`;
+    }
+
+    function confirmRoute(id) {
+      const s = SHIPS.find(x => x.id === id);
+      const wx = liveWeatherData[s.from];
+      writeFB(s, 'Reroute via Cape of Good Hope', 'Executed', wx ? `${wx.desc} ${wx.windKmh}km/h` : 'N/A');
+      showToast('&#10003; Reroute executed for ' + id + ' &#8212; carrier notified');
+    }
+
+    function renderBarChart(data) {
+      const entries = Object.entries(data);
+      const max = Math.max(...entries.map(([, v]) => v));
+      document.getElementById('bchart').innerHTML = entries.map(([label, val]) => `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1">
+      <div style="font-size:11px;color:var(--lg);font-weight:600">${val}</div>
+      <div style="width:100%;background:linear-gradient(180deg,var(--tl),var(--tl2));
+        border-radius:3px 3px 0 0;height:${(val / max) * 120}px;transition:height 1s"></div>
+      <div style="font-size:10px;color:var(--gy)">${label}</div>
+    </div>`).join('');
+    }
+
+    function renderLog(decisions = []) {
+      const tb = document.getElementById('logtbody');
+      if (!decisions.length) {
+        tb.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gy);padding:18px">
+      No decisions yet &#8212; execute a reroute to see entries here
+    </td></tr>`;
+        return;
+      }
+      tb.innerHTML = decisions.slice().reverse().slice(0, 20).map(d => `
+    <tr>
+      <td style="color:var(--gy)">${new Date(d.time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</td>
+      <td style="color:var(--tl);font-weight:700">${d.shipId}</td>
+      <td>${d.route}</td>
+      <td>${d.action}</td>
+      <td><span style="font-weight:700;color:${d.score > 80 ? 'var(--rd)' : 'var(--am)'}">${d.score}</span></td>
+      <td style="font-size:11px;color:var(--ltl)">${d.weather || 'N/A'}</td>
+      <td><span class="bdg btl">${d.outcome}</span></td>
+    </tr>`).join('');
+    }
+
+    function renderAnalytics() {
+      // Render from Firebase if available, fallback to static
+      if (!document.getElementById('bchart').innerHTML) {
+        renderBarChart({ 'Apr 1': 8, 'Apr 7': 12, 'Apr 14': 7, 'Apr 21': 14, 'Today': 5 });
+      }
+      const causes = [
+        { n: 'Port Congestion', pct: 38, c: 'var(--am)' }, { n: 'Weather Events', pct: 24, c: 'var(--tl)' },
+        { n: 'Customs Delays', pct: 18, c: 'var(--gB)' }, { n: 'Carrier Issues', pct: 12, c: 'var(--rd)' },
+        { n: 'Route Disruption', pct: 8, c: 'var(--gy)' },
+      ];
+      document.getElementById('clist').innerHTML = causes.map(c => `
+    <div style="display:flex;align-items:center;gap:11px">
+      <div style="width:128px;font-size:12px;color:var(--lg)">${c.n}</div>
+      <div style="flex:1;background:rgba(255,255,255,.05);border-radius:3px;height:7px;overflow:hidden">
+        <div style="width:${c.pct}%;height:100%;background:${c.c};border-radius:3px;transition:width 1s"></div>
+      </div>
+      <div style="width:30px;font-size:12px;font-weight:700;color:${c.c};text-align:right">${c.pct}%</div>
+    </div>`).join('');
+    }
+
+    // ── MODAL WITH REAL GEMINI + REAL WEATHER ──────────────────────
+    async function openAlert(s) {
+      curShip = s;
+      document.getElementById('mid').textContent = s.id;
+      document.getElementById('modal').classList.add('on');
+      document.getElementById('mbody').innerHTML = `
+    <div style="text-align:center;padding:24px 0">
+      <div class="think" style="margin-bottom:9px"><span></span><span></span><span></span></div>
+      <div style="font-size:13px;color:var(--gy)">Fetching live weather &amp; running Gemini 2.0 Flash...</div>
+    </div>`;
+
+      // Fetch real weather FIRST
+      const wx = await fetchWeather(s.from);
+      const wxText = wx
+        ? `${wx.desc} at ${s.from} port | Temp: ${wx.temp}°C | Wind: ${wx.windKmh}km/h | ${wx.isAlert ? 'WEATHER ALERT ACTIVE' : 'Conditions normal'}`
+        : 'Weather data unavailable — using known risk factors';
+
+      const prompt = `You are ChainGuard AI, a supply chain disruption analyst.
+Analyse shipment ${s.id} using the LIVE data below and respond ONLY in valid JSON.
+
+SHIPMENT: ${s.from} → ${s.to} via ${s.via} | Carrier: ${s.carrier} | ETA: ${s.eta}
+KNOWN RISK FACTORS: ${s.cause || 'None identified'}
+LIVE WEATHER (Open-Meteo, fetched now): ${wxText}
+
+Return this exact JSON:
+{
+  "riskScore": <0-100>,
+  "severity": "<CRITICAL|HIGH|MEDIUM|LOW>",
+  "primaryCause": "<one sentence combining weather and known risks>",
+  "estimatedDelay": "<e.g. 4-6 hours or None>",
+  "recommendation": "<one action>",
+  "alternateRoute": "<brief description>",
+  "costImpact": "<e.g. -$340>",
+  "carbonImpact": "<e.g. -8% CO2>",
+  "confidence": <0-100>,
+  "weatherInfluence": "<how the live weather affects this risk>"
+}`;
+
+      try {
+        const raw = await callGemini(prompt);
+        const d = JSON.parse(raw);
+        document.getElementById('mbody').innerHTML = `
+      <div style="font-size:11px;background:rgba(0,188,212,.06);border:1px solid rgba(0,188,212,.15);
+        border-radius:6px;padding:7px 10px;margin-bottom:10px;color:var(--ltl)">
+        &#127760; Live weather: ${wxText}
+      </div>
+      <div class="mr"><span class="mk">Route</span><span class="mv">${s.from} &rarr; ${s.to} (${s.via})</span></div>
+      <div class="mr"><span class="mk">Carrier</span><span class="mv">${s.carrier} &middot; ETA ${s.eta}</span></div>
+      <div class="mr"><span class="mk">Gemini Risk Score</span>
+        <span class="mv ${d.riskScore > 80 ? 'rd' : 'am'}">${d.riskScore}/100 &mdash; ${d.severity}</span></div>
+      <div class="mr"><span class="mk">Primary Cause</span><span class="mv am">${d.primaryCause}</span></div>
+      <div class="mr"><span class="mk">Weather Influence</span><span class="mv am">${d.weatherInfluence}</span></div>
+      <div class="mr"><span class="mk">Estimated Delay</span><span class="mv am">${d.estimatedDelay}</span></div>
+      <div class="mr"><span class="mk">Recommendation</span><span class="mv tl">${d.recommendation}</span></div>
+      <div class="mr"><span class="mk">Alternate Route</span><span class="mv tl">${d.alternateRoute}</span></div>
+      <div class="mr"><span class="mk">Cost Impact</span><span class="mv">${d.costImpact}</span></div>
+      <div class="mr"><span class="mk">Carbon Impact</span><span class="mv gn">${d.carbonImpact}</span></div>
+      <div class="mr"><span class="mk">Confidence</span><span class="mv gn">${d.confidence}% &middot; Gemini 2.0 Flash</span></div>`;
+      } catch (e) {
+        // Fallback: show weather + static data
+        document.getElementById('mbody').innerHTML = `
+      <div style="font-size:11px;background:rgba(0,188,212,.06);border:1px solid rgba(0,188,212,.15);
+        border-radius:6px;padding:7px 10px;margin-bottom:10px;color:var(--ltl)">
+        &#127760; Live weather: ${wxText}
+      </div>
+      <div class="mr"><span class="mk">Route</span><span class="mv">${s.from} &rarr; ${s.to} (${s.via})</span></div>
+      <div class="mr"><span class="mk">Carrier</span><span class="mv">${s.carrier} &middot; ETA ${s.eta}</span></div>
+      <div class="mr"><span class="mk">Risk Score</span><span class="mv ${s.score > 80 ? 'rd' : 'am'}">${s.score}/100 &mdash; ${s.score > 80 ? 'CRITICAL' : 'HIGH'}</span></div>
+      <div class="mr"><span class="mk">Root Cause</span><span class="mv am">${s.cause}</span></div>
+      <div class="mr"><span class="mk">Recommendation</span><span class="mv tl">Reroute via Cape of Good Hope &mdash; -$340, +22hr, -8% CO2</span></div>
+      <div class="mr"><span class="mk">Note</span><span class="mv" style="color:var(--gy);font-size:11px">Add Gemini API key for live AI analysis</span></div>`;
+      }
+    }
+
+    function closeModal() { document.getElementById('modal').classList.remove('on'); }
+
+    function doReroute() {
+      closeModal();
+      const wx = liveWeatherData[curShip?.from];
+      writeFB(curShip, 'Reroute via Cape of Good Hope', 'Executed',
+        wx ? `${wx.desc} ${wx.windKmh}km/h` : 'N/A');
+      showToast('&#10003; Reroute executed for ' + (curShip?.id || '') + ' &#8212; saved to Firebase');
+    }
+
+    function doEscalate() {
+      closeModal();
+      const wx = liveWeatherData[curShip?.from];
+      writeFB(curShip, 'Escalated P1', 'Pending Review',
+        wx ? `${wx.desc} ${wx.windKmh}km/h` : 'N/A');
+      showToast('&#9888; ' + (curShip?.id || '') + ' escalated &#8212; saved to Firebase', 'var(--rd)');
+    }
+
+    async function fleetScan() {
+      showToast('Fetching live weather + Gemini 2.0 Flash scanning fleet...');
+      const atRisk = SHIPS.filter(s => s.st !== 'on-time');
+      if (!atRisk.length) return;
+      const s = atRisk[0];
+      const wx = await fetchWeather(s.from);
+      const wxText = wx ? `${wx.desc}, wind ${wx.windKmh}km/h` : 'Weather unavailable';
+      try {
+        const raw = await callGemini(
+          `Score this shipment 0-100 for disruption risk and give severity. Respond only in JSON: {"riskScore":<int>,"severity":"<CRITICAL|HIGH|MEDIUM|LOW>"}.
+      Shipment ${s.id}: ${s.from} to ${s.to}. Weather at ${s.from}: ${wxText}. Known issues: ${s.cause}`
+        );
+        const d = JSON.parse(raw);
+        document.getElementById('gi1').textContent = d.severity || 'ELEVATED';
+        document.getElementById('gi1').style.color = d.riskScore > 80 ? 'var(--rd)' : 'var(--am)';
+        document.getElementById('gd1').textContent = `${s.id}: risk ${d.riskScore}/100. ${s.from} conditions: ${wxText}`;
+        showToast('Gemini: ' + s.id + ' scored ' + d.riskScore + '/100 (' + d.severity + ')');
+      } catch (e) {
+        showToast('Re-analysis complete &#8212; add Gemini key for live scoring');
+      }
+    }
+
+    function showToast(msg, col = 'var(--gn)') {
+      const t = document.getElementById('toast');
+      t.innerHTML = msg; t.style.background = col;
+      t.classList.add('on');
+      setTimeout(() => t.classList.remove('on'), 3400);
+    }
+
+    function sv(v) {
+      document.querySelectorAll('.view').forEach(e => e.classList.remove('on'));
+      document.querySelectorAll('.nlink').forEach(e => e.classList.remove('on'));
+      document.querySelectorAll('.sitem').forEach(e => e.classList.remove('on'));
+      document.getElementById('view-' + v).classList.add('on');
+      const m = { dashboard: 0, alerts: 1, optimizer: 2, analytics: 3 };
+      if (m[v] !== undefined) document.querySelectorAll('.nlink')[m[v]]?.classList.add('on');
+      if (v === 'analytics') renderAnalytics();
+      if (v === 'alerts') renderFullAlerts();
+      if (v === 'optimizer') renderOptimizer();
+      if (v === 'log') renderLog();
+    }
+
+    // ── INIT ───────────────────────────────────────────────────────
+    renderAlerts();
+    renderTable();
+    renderBarChart({ 'Apr 1': 8, 'Apr 7': 12, 'Apr 14': 7, 'Apr 21': 14, 'Today': 5 });
+    loadWeatherStrip(); // Fetch real live weather immediately
+  </script>
+</body>
+
+</html>
