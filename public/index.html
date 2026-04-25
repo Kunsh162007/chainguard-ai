@@ -1304,21 +1304,33 @@
     }
 
     function writeFB(ship, action, outcome, weather) {
-      if (!window._fbReady || !fbOK) return;
-      const db = window._db, r = window._ref;
-      window._push(r(db, 'decisions'), {
+      const entry = {
+        id: Date.now(),
         time: new Date().toISOString(),
-        shipId: ship.id, route: ship.from + ' > ' + ship.to,
-        action, score: ship.score, outcome,
+        shipId: ship.id,
+        route: ship.from + ' > ' + ship.to,
+        action,
+        score: ship.score,
+        outcome,
         weather: weather || 'N/A'
-      });
-      // Update reroutes counter
-      window._get(r(db, 'analytics/reroutesToday')).then(s => {
-        window._set(r(db, 'analytics/reroutesToday'), (s.val() || 12) + 1);
-      });
-      // Update shipment status in Firebase
-      window._set(r(db, 'shipments/' + ship.id + '/lastAction'), action);
-      window._set(r(db, 'shipments/' + ship.id + '/lastUpdated'), Date.now());
+      };
+
+      // 1. Always save to LocalStorage (Reliable for Demo)
+      const logs = JSON.parse(localStorage.getItem('cg_logs') || '[]');
+      logs.push(entry);
+      localStorage.setItem('cg_logs', JSON.stringify(logs));
+      if (!fbOK) renderLog(logs); // Refresh UI if offline
+
+      // 2. Try to save to Firebase if connected
+      if (window._fbReady && fbOK) {
+        const db = window._db, r = window._ref;
+        window._push(r(db, 'decisions'), entry);
+        window._get(r(db, 'analytics/reroutesToday')).then(s => {
+          window._set(r(db, 'analytics/reroutesToday'), (s.val() || 12) + 1);
+        });
+        window._set(r(db, 'shipments/' + ship.id + '/lastAction'), action);
+        window._set(r(db, 'shipments/' + ship.id + '/lastUpdated'), Date.now());
+      }
     }
 
     // ── OPEN-METEO WEATHER (100% FREE, NO KEY NEEDED) ─────────────
@@ -1597,13 +1609,17 @@
 
     function renderLog(decisions = []) {
       const tb = document.getElementById('logtbody');
-      if (!decisions.length) {
+      // Merge Firebase decisions with LocalStorage for the demo
+      const local = JSON.parse(localStorage.getItem('cg_logs') || '[]');
+      const all = [...decisions, ...local].filter((v, i, a) => a.findIndex(t => (t.id === v.id || t.time === v.time)) === i);
+      
+      if (!all.length) {
         tb.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gy);padding:18px">
       No decisions yet &#8212; execute a reroute to see entries here
     </td></tr>`;
         return;
       }
-      tb.innerHTML = decisions.slice().reverse().slice(0, 20).map(d => `
+      tb.innerHTML = all.slice().sort((a,b) => new Date(b.time) - new Date(a.time)).slice(0, 20).map(d => `
     <tr>
       <td style="color:var(--gy)">${new Date(d.time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</td>
       <td style="color:var(--tl);font-weight:700">${d.shipId}</td>
@@ -1694,18 +1710,18 @@ Return this exact JSON:
       <div class="mr"><span class="mk">Carbon Impact</span><span class="mv gn">${d.carbonImpact}</span></div>
       <div class="mr"><span class="mk">Confidence</span><span class="mv gn">${d.confidence}% &middot; Gemini 2.0 Flash</span></div>`;
       } catch (e) {
-        // Fallback: show weather + static data
+        console.error("Gemini Error:", e);
+        // Fallback UI
         document.getElementById('mbody').innerHTML = `
-      <div style="font-size:11px;background:rgba(0,188,212,.06);border:1px solid rgba(0,188,212,.15);
-        border-radius:6px;padding:7px 10px;margin-bottom:10px;color:var(--ltl)">
-        &#127760; Live weather: ${wxText}
+      <div style="font-size:11px;background:rgba(255,82,82,.06);border:1px solid rgba(255,82,82,.15);
+        border-radius:6px;padding:7px 10px;margin-bottom:10px;color:var(--rd)">
+        &#9888; Gemini Error: ${e.message}
       </div>
       <div class="mr"><span class="mk">Route</span><span class="mv">${s.from} &rarr; ${s.to} (${s.via})</span></div>
       <div class="mr"><span class="mk">Carrier</span><span class="mv">${s.carrier} &middot; ETA ${s.eta}</span></div>
-      <div class="mr"><span class="mk">Risk Score</span><span class="mv ${s.score > 80 ? 'rd' : 'am'}">${s.score}/100 &mdash; ${s.score > 80 ? 'CRITICAL' : 'HIGH'}</span></div>
+      <div class="mr"><span class="mk">Risk Score</span><span class="mv ${s.score > 80 ? 'rd' : 'am'}">${s.score}/100</span></div>
       <div class="mr"><span class="mk">Root Cause</span><span class="mv am">${s.cause}</span></div>
-      <div class="mr"><span class="mk">Recommendation</span><span class="mv tl">Reroute via Cape of Good Hope &mdash; -$340, +22hr, -8% CO2</span></div>
-      <div class="mr"><span class="mk">Note</span><span class="mv" style="color:var(--gy);font-size:11px">Add Gemini API key for live AI analysis</span></div>`;
+      <div class="mr"><span class="mk">Recommendation</span><span class="mv tl">Reroute via Cape of Good Hope &mdash; -$340, +22hr, -8% CO2</span></div>`;
       }
     }
 
@@ -1745,7 +1761,8 @@ Return this exact JSON:
         document.getElementById('gd1').textContent = `${s.id}: risk ${d.riskScore}/100. ${s.from} conditions: ${wxText}`;
         showToast('Gemini: ' + s.id + ' scored ' + d.riskScore + '/100 (' + d.severity + ')');
       } catch (e) {
-        showToast('Re-analysis complete &#8212; add Gemini key for live scoring');
+        console.error("Gemini FleetScan Error:", e);
+        showToast('Gemini Error: ' + e.message, 'var(--rd)');
       }
     }
 
